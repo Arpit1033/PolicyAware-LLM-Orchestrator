@@ -197,3 +197,7 @@ cython_debug/
 
 # Antigravity
 .agents/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+notebook/1-django-users-perms.ipynb
