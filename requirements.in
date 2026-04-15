@@ -5,3 +5,4 @@ langgraph
 langgraph-supervisor
 python-decouple
 permit
+psycopg2-binary
