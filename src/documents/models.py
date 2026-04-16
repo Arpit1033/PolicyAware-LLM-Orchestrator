@@ -9,7 +9,7 @@ User = settings.AUTH_USER_MODEL
 class Document(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(default="Title")
-    content = models.TextField(blank=True, null=True)
+    content = models.TextField(blank=True, default="")
     active = models.BooleanField(default=True)
     active_at = models.DateTimeField(auto_now_add=False, auto_now=False, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True) # db auto update this field to when it's created
