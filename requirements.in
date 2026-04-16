@@ -6,3 +6,4 @@ langgraph-supervisor
 python-decouple
 permit
 psycopg2-binary
+langchain-google-genai

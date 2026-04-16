@@ -1,0 +1,13 @@
+from django.conf import settings
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+def get_google_api_key():
+    return settings.GOOGLE_API_KEY
+
+def get_llm_model(model="gemini-2.5-flash-lite"):
+    return ChatGoogleGenerativeAI(
+        model=model,
+        temperature=0,
+        max_retries=2,
+        google_api_key=get_google_api_key(), 
+    )
