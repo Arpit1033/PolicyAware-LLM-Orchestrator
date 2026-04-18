@@ -131,3 +131,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 GOOGLE_API_KEY = config("GOOGLE_API_KEY", default=None)
 TMDB_API_KEY = config("TMDB_API_KEY", default=None)
+PERMIT_API_KEY = config("PERMIT_API_KEY", default=None)
+PERMIT_PDP_URL = config("PERMIT_PDP_URL", default=None)
