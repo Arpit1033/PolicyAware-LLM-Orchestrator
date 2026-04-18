@@ -130,3 +130,4 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 GOOGLE_API_KEY = config("GOOGLE_API_KEY", default=None)
+TMDB_API_KEY = config("TMDB_API_KEY", default=None)
