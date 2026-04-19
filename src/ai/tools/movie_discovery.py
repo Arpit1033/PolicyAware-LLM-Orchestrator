@@ -15,7 +15,6 @@ def search_movies(query: str, limit:int=5, config:RunnableConfig = {}):
     """
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
-    print('Searching with user', user_id)
     try:
         response = tmdb_client.search_movie(query, raw=False)
     except Exception as e:
@@ -23,7 +22,7 @@ def search_movies(query: str, limit:int=5, config:RunnableConfig = {}):
     
     try:
         total_results = int(response.get("total_results"))
-    except:
+    except (TypeError, ValueError):
         total_results = -1
     if total_results == 0:
         return []
@@ -43,7 +42,6 @@ def movie_detail(movie_id: int, config:RunnableConfig = {}):
     """
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
-    print('Searching with user', user_id)
     try:
         response = tmdb_client.movie_detail(movie_id, raw=False)
         return response

@@ -152,7 +152,7 @@ def update_document(document_id:int, title:str =None, content:str = None, config
         obj = Document.objects.get(id=document_id, owner_id=user_id, active=True)
     except Document.DoesNotExist:
         raise Exception("Document not found, try again")
-    except:
+    except Exception as e:
         raise Exception("Invalid request for a document detail, try again")
     
     if title is not None:
@@ -187,7 +187,7 @@ def delete_document(document_id:int, config:RunnableConfig):
         obj = Document.objects.get(id=document_id, owner_id=user_id, active=True)
     except Document.DoesNotExist:
         raise Exception("Document not found, try again")
-    except:
+    except Exception as e:
         raise Exception("Invalid request for a document detail, try again")
 
     obj.delete()
