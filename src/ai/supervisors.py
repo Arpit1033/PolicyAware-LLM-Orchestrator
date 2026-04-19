@@ -1,5 +1,5 @@
 from langgraph_supervisor import create_supervisor
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from ai import agents
 from ai.llms import get_llm_model
