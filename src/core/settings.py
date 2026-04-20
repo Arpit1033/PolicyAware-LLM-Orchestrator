@@ -41,6 +41,8 @@ INSTALLED_APPS = [
 
     # Other apps
     "documents",
+    "ninja_extra",
+    "ninja_jwt",
 ]
 
 MIDDLEWARE = [

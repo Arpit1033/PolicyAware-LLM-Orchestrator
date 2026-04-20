@@ -6,10 +6,10 @@ def get_google_api_key():
 
 def get_llm_model(model=None):
     if model is None:
-        model = "gemini-2.5-flash-lite"
+        model = "gemini-3.1-flash-lite-preview"
     return ChatGoogleGenerativeAI(
         model=model,
         temperature=0,
-        max_retries=2,
+        max_retries=3,
         google_api_key=get_google_api_key(), 
     )

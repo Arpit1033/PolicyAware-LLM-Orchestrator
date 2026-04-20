@@ -7,3 +7,6 @@ python-decouple
 permit
 psycopg2-binary
 langchain-google-genai
+django-ninja
+django-ninja-jwt
+google-api-core
