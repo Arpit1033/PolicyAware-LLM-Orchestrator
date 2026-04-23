@@ -10,3 +10,5 @@ langchain-google-genai
 django-ninja
 django-ninja-jwt
 google-api-core
+langgraph-checkpoint-postgres
+psycopg[binary,pool]

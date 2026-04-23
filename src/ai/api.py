@@ -1,6 +1,6 @@
 from ninja import Router, Schema
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
+from ai.checkpointer import get_checkpointer
 from ninja.errors import HttpError
 from google.api_core.exceptions import ResourceExhausted
 from typing import Optional
@@ -15,14 +15,13 @@ router = Router(tags=["AI Agents"])
 # ── Supervisor singleton ──────────────────────────────────────────
 # Creating the supervisor is expensive (loads LLM, sub-agents, graph).
 # We initialize it once on first request and reuse it across all requests.
-# MemorySaver keeps conversation state in-process.
-_checkpointer = MemorySaver()
+# PostgresSaver persists conversation state in PostgreSQL.
 _supervisor = None
 
 def _get_supervisor():
     global _supervisor
     if _supervisor is None:
-        _supervisor = get_supervisor(checkpointer=_checkpointer)
+        _supervisor = get_supervisor(checkpointer=get_checkpointer())
     return _supervisor
 
 
