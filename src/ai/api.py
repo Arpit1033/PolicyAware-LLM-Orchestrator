@@ -6,6 +6,7 @@ from google.api_core.exceptions import ResourceExhausted
 from typing import Optional
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 import uuid
+from pydantic import Field
 
 from ai.supervisors import get_supervisor
 
@@ -27,7 +28,7 @@ def _get_supervisor():
 
 # ── Schemas ───────────────────────────────────────────────────────
 class ChatRequest(Schema):
-    message: str
+    message: str = Field(..., max_length=2000)
     thread_id: Optional[str] = None
 
 
@@ -37,7 +38,9 @@ class ChatResponse(Schema):
 
 
 # ── Endpoint ──────────────────────────────────────────────────────
-@router.post("/chat", response=ChatResponse)
+from ninja.throttling import AuthRateThrottle
+
+@router.post("/chat", response=ChatResponse, throttle=AuthRateThrottle('10/m'))
 def chat(request, payload: ChatRequest):
     provided_thread_id = payload.thread_id or str(uuid.uuid4())
     user_id = str(request.user.pk)
