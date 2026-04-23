@@ -12,3 +12,6 @@ django-ninja-jwt
 google-api-core
 langgraph-checkpoint-postgres
 psycopg[binary,pool]
+django-cors-headers
+gunicorn
+uvicorn
