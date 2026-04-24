@@ -8,41 +8,16 @@ Unlike typical LLM wrappers, this system ensures that **every AI tool call is po
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TD
-    Client[Client / Frontend] -->|JWT Auth & REST API| Django[Django Ninja API]
-    
-    subgraph Backend Core
-        Django --> Auth[Authentication Layer]
-        Auth --> AI_Router[POST /api/v1/ai/chat]
-    end
-    
-    subgraph AI Orchestration Layer
-        AI_Router --> Supervisor[(LangGraph Supervisor)]
-        Supervisor -->|Delegates| DocAgent[Document Assistant]
-        Supervisor -->|Delegates| MovieAgent[Movie Assistant]
-    end
-    
-    subgraph Tools & Authorization
-        DocAgent --> Tool[Documents CRUD Tools]
-        Tool -->|Policy Check| Permit[Permit.io PDP]
-        Permit -.->|Allow/Deny| Tool
-        Tool --> DB[(PostgreSQL)]
-        
-        MovieAgent --> TMDB[TMDB Client]
-        TMDB --> TMDB_API[The Movie Database API]
-    end
-    
-    Supervisor <--> |Persists thread history| PG_Saver[(PostgresSaver Memory)]
-```
+![System Architecture](./docs/architecture.png)
+
 
 ## 🚀 Tech Stack
 
-- **Backend:** Python 3.12, Django 5.2, Django Ninja, Django REST SimpleJWT
-- **AI/LLM:** LangGraph, LangGraph Supervisor, Google Gemini 2.5 Pro
+- **Backend:** Python 3.12+, Django 5.2, Django Ninja, Django Ninja JWT
+- **AI/LLM:** LangGraph, LangGraph Supervisor, Google Gemini 2.5 Flash
 - **Security:** Permit.io (RBAC Authorization)
 - **Database:** PostgreSQL (with LangGraph `PostgresSaver` for conversation memory)
-- **Deployment:** Gunicorn, Uvicorn, Docker-ready
+- **Deployment:** Gunicorn + Uvicorn Workers, deployed on Render
 
 ## 🛡️ Key Security Features
 
@@ -50,6 +25,8 @@ graph TD
 2. **Thread Isolation:** Chat memory (`thread_id`) is strictly bound to `request.user.pk` to prevent cross-tenant conversation spillage.
 3. **Data Protection:** Generic API endpoints enforce IDOR-safe queries (`owner=request.user`) and use soft-deletes (`active=False`).
 4. **Internal Error Masking:** Detailed LLM provider errors (like Gemini 429 Rate Limits) are caught and mapped to standard HTTP errors, preventing competitive intelligence leakage.
+5. **Per-User Rate Limiting:** The AI chat endpoint enforces `10 requests/minute` per authenticated user via `AuthRateThrottle`, preventing Denial-of-Wallet attacks on API quotas.
+6. **Input Validation:** Chat message payloads are strictly limited to 2,000 characters via Pydantic `Field(max_length=2000)`, preventing memory-exhaustion attacks.
 
 ## 🛠️ Local Setup
 
@@ -83,15 +60,21 @@ graph TD
 
 ## 🌐 API Endpoints
 
-Once running, explore the Swagger documentation at: `http://127.0.0.1:8000/api/v1/docs`
+Once running, explore the full Swagger documentation at: `http://127.0.0.1:8000/api/v1/docs` 
+Or live at: `https://policyaware-llm-orchestrator.onrender.com/api/v1/docs`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/token/pair` | Login and receive JWT access token |
+| `POST` | `/api/v1/auth/token/pair` | Login and receive JWT access + refresh tokens |
+| `POST` | `/api/v1/auth/token/refresh` | Refresh an expired access token |
+| `POST` | `/api/v1/auth/token/verify` | Verify a token is still valid |
 | `GET`  | `/api/v1/health` | System health check |
 | `POST` | `/api/v1/ai/chat/` | Send a message to the Multi-Agent Supervisor |
-| `GET`  | `/api/v1/documents/list-documents` | List users active documents |
+| `GET`  | `/api/v1/documents/list-documents` | List user's active documents |
+| `GET`  | `/api/v1/documents/get-document/{id}` | Retrieve a specific document |
 | `POST` | `/api/v1/documents/create-document` | Create a new document |
+| `PUT`  | `/api/v1/documents/update-document/{id}` | Update an existing document |
+| `DELETE` | `/api/v1/documents/delete-document/{id}` | Soft-delete a document |
 
 ## 📝 License
 This project is licensed under the MIT License.
