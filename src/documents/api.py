@@ -4,6 +4,8 @@ from datetime import datetime
 from .models import Document
 from typing import Optional
 
+_NOT_FOUND_MSG = "Document not found"
+
 router = Router(tags=["Documents"])
 
 
@@ -39,7 +41,7 @@ def get_document(request, document_id: int):
     try:
         return Document.objects.get(id=document_id, owner=request.user, active=True)
     except Document.DoesNotExist:
-        raise HttpError(404, "Document not found")
+        raise HttpError(404, _NOT_FOUND_MSG)
 
 
 @router.post("/create-document", response={201: DocumentResponse})
@@ -59,7 +61,7 @@ def update_document(request, document_id: int, payload: DocumentUpdateSchema):
     try:
         obj = Document.objects.get(id=document_id, owner=request.user, active=True)
     except Document.DoesNotExist:
-        raise HttpError(404, "Document not found")
+        raise HttpError(404, _NOT_FOUND_MSG)
 
     if payload.title is not None:
         obj.title = payload.title
@@ -75,7 +77,7 @@ def delete_document(request, document_id: int):
     try:
         obj = Document.objects.get(id=document_id, owner=request.user, active=True)
     except Document.DoesNotExist:
-        raise HttpError(404, "Document not found")
+        raise HttpError(404, _NOT_FOUND_MSG)
     obj.active = False
     obj.save()
     return {"message": "Document deleted successfully!"}
