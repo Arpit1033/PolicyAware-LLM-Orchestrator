@@ -2,6 +2,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 
 from tmdb import client as tmdb_client
+from ai.constants import MAX_MOVIE_RESULTS
 
 
 @tool
@@ -26,8 +27,8 @@ def search_movies(query: str, limit:int=5, config:RunnableConfig = {}):
         total_results = -1
     if total_results == 0:
         return []
-    if limit > 25:
-        limit = 25
+    if limit > MAX_MOVIE_RESULTS:
+        limit = MAX_MOVIE_RESULTS
     results = response.get("results")[:limit]
     return results
     

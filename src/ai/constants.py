@@ -16,6 +16,7 @@ def permission_denied_message(action: str) -> str:
 
 # ── Document Tool Limits ──────────────────────────────────────────
 MAX_DOCUMENT_RESULTS = 25
+MAX_MOVIE_RESULTS = 25
 
 # ── Chat API Limits ───────────────────────────────────────────────
 MAX_CHAT_MESSAGE_LENGTH = 2000

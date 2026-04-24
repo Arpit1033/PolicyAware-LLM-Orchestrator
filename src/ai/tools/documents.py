@@ -4,12 +4,12 @@ from langchain_core.runnables import RunnableConfig
 from documents.models import Document
 from django.db.models import Q
 from mypermit import permit_client as permit
-from ai.constants import (
-    INVALID_USER_REQUEST,
-    INVALID_DOCUMENT_REQUEST,
-    DOCUMENT_NOT_FOUND,
-    MAX_DOCUMENT_RESULTS,
-    permission_denied_message
+from ai.constants import MAX_DOCUMENT_RESULTS
+from ai.exceptions import (
+    DocumentPermissionError,
+    InvalidUserContextError,
+    DocumentNotFoundError,
+    DocumentOperationError
 )
 
 @tool
@@ -33,7 +33,7 @@ def search_query_documents(query: str, limit:int=5, config:RunnableConfig = None
 
     has_perms = async_to_sync(permit.check)(f"{user_id}", "read", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("search"))
+        raise DocumentPermissionError("search")
 
     qs = Document.objects.filter(**default_lookups).filter(
         Q(title__icontains=query) |
@@ -61,7 +61,7 @@ def list_documents(limit:int = 5, config: RunnableConfig= None):
     limit = min(limit, MAX_DOCUMENT_RESULTS)
     has_perms = async_to_sync(permit.check)(f"{user_id}", "read", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("list all"))
+        raise DocumentPermissionError("list all")
     
     qs = Document.objects.filter(active=True, owner_id=user_id).order_by("-created_at")
     response_data = []
@@ -83,18 +83,18 @@ def get_document(document_id:int, config: RunnableConfig):
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
     if user_id is None:
-        raise Exception(INVALID_USER_REQUEST)
+        raise InvalidUserContextError()
 
     has_perms = async_to_sync(permit.check)(f"{user_id}", "read", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("read"))
+        raise DocumentPermissionError("read")
 
     try:
         obj = Document.objects.get(id=document_id, active=True, owner_id=user_id)
     except Document.DoesNotExist:
-        raise Exception(DOCUMENT_NOT_FOUND)
+        raise DocumentNotFoundError()
     except Exception as e:
-        raise Exception(INVALID_DOCUMENT_REQUEST)
+        raise DocumentOperationError()
     response_data =  {
         "id": obj.id,
         "title": obj.title,
@@ -116,11 +116,11 @@ def create_document(title:str, content:str, config:RunnableConfig):
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
     if user_id is None:
-        raise Exception(INVALID_USER_REQUEST)
+        raise InvalidUserContextError()
     
     has_perms = async_to_sync(permit.check)(f"{user_id}", "create", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("create"))
+        raise DocumentPermissionError("create")
     
     obj = Document.objects.create(title=title, content=content, owner_id=user_id, active=True)
     response_data =  {
@@ -144,18 +144,18 @@ def update_document(document_id:int, title:str =None, content:str = None, config
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
     if user_id is None:
-        raise Exception(INVALID_USER_REQUEST)
+        raise InvalidUserContextError()
 
     has_perms = async_to_sync(permit.check)(f"{user_id}", "update", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("update"))
+        raise DocumentPermissionError("update")
     
     try:
         obj = Document.objects.get(id=document_id, owner_id=user_id, active=True)
     except Document.DoesNotExist:
-        raise Exception(DOCUMENT_NOT_FOUND)
+        raise DocumentNotFoundError()
     except Exception as e:
-        raise Exception(INVALID_DOCUMENT_REQUEST)
+        raise DocumentOperationError()
     
     if title is not None:
         obj.title = title
@@ -179,18 +179,18 @@ def delete_document(document_id:int, config:RunnableConfig):
     configurable = config.get('configurable') or config.get('metadata')
     user_id = configurable.get('user_id')
     if user_id is None:
-        raise Exception(INVALID_USER_REQUEST)
+        raise InvalidUserContextError()
 
     has_perms = async_to_sync(permit.check)(f"{user_id}", "delete", "document")
     if not has_perms:
-        raise Exception(permission_denied_message("delete"))
+        raise DocumentPermissionError("delete")
 
     try:
         obj = Document.objects.get(id=document_id, owner_id=user_id, active=True)
     except Document.DoesNotExist:
-        raise Exception(DOCUMENT_NOT_FOUND)
+        raise DocumentNotFoundError()
     except Exception as e:
-        raise Exception(INVALID_DOCUMENT_REQUEST)
+        raise DocumentOperationError()
 
     obj.delete()
     response_data =  {"message": "success"}
