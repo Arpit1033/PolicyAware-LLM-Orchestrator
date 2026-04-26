@@ -6,10 +6,13 @@ from google.api_core.exceptions import ResourceExhausted
 from typing import Optional
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 import uuid
+import logging
 from pydantic import Field
 
 from ai.supervisors import get_supervisor
+from ai.exceptions import AgentToolError
 
+logger = logging.getLogger(__name__)
 router = Router(tags=["AI Agents"])
 
 
@@ -62,9 +65,15 @@ def chat(request, payload: ChatRequest):
     except ChatGoogleGenerativeAIError as e:
         cause = e.__cause__ or e.__context__
         if isinstance(cause, ResourceExhausted) or "429" in str(e):
+            logger.warning(f"Gemini rate limit hit: {e}")
             raise HttpError(429, "AI service is rate limited. Please wait a moment and try again.")
+        logger.error(f"Gemini model error: {e}")
         raise HttpError(500, "The AI agent encountered a model error. Please try again.")
-    except Exception:
+    except AgentToolError as e:
+        logger.log(e.log_level, f"{type(e).__name__}: {e}")
+        raise HttpError(e.status_code, str(e))
+    except Exception as e:
+        logger.error(f"AI agent internal error: {e}", exc_info=True)
         raise HttpError(500, "The AI agent encountered an internal error. Please try again.")
 
     last_msg = result["messages"][-1]

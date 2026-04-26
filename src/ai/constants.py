@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 # ── AI Agent Constants ────────────────────────────────────────────
 '''
     This file serves as the single source of truth for all constants
@@ -21,3 +23,13 @@ MAX_MOVIE_RESULTS = 25
 # ── Chat API Limits ───────────────────────────────────────────────
 MAX_CHAT_MESSAGE_LENGTH = 2000
 CHAT_RATE_LIMIT = "10/m"
+
+# ── Permit.io ────────────────────────────────────────────
+class PermitRole(StrEnum):
+    """Valid roles for Permit.io RBAC policy enforcement."""
+    ADMIN = "admin"
+    MANAGER = "manager"
+    VIEWER = "viewer"
+
+PERMIT_DEFAULT_ROLE = PermitRole.VIEWER
+PERMIT_DEFAULT_TENANT = "default"
