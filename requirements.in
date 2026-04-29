@@ -12,5 +12,6 @@ google-api-core
 langgraph-checkpoint-postgres
 psycopg[binary,pool]
 django-cors-headers
+whitenoise
 gunicorn
 uvicorn
