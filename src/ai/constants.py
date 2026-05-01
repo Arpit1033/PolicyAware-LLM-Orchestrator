@@ -28,9 +28,9 @@ CHAT_RATE_LIMIT = "10/m"
 class PermitRole(StrEnum):
     """Valid roles for Permit.io RBAC policy enforcement."""
     ADMIN = "admin"
-    MANAGER = "manager"
-    VIEWER = "viewer"
+    MANAGER = "document#manager"
+    VIEWER = "document#viewer"
 
 PERMIT_DEFAULT_ROLE = PermitRole.VIEWER
 PERMIT_DEFAULT_TENANT = "default"
-PERMIT_USER_ASSIGNABLE_ROLES = {PermitRole.VIEWER, PermitRole.MANAGER}
+PERMIT_USER_ASSIGNABLE_ROLES = {PermitRole.VIEWER, PermitRole.MANAGER, PermitRole.ADMIN}
