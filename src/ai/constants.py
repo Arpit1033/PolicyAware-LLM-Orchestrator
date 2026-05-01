@@ -32,4 +32,5 @@ class PermitRole(StrEnum):
     VIEWER = "viewer"
 
 PERMIT_DEFAULT_ROLE = PermitRole.VIEWER
-PERMIT_DEFAULT_TENANT = "default"
+PERMIT_DEFAULT_TENANT = "default"
+PERMIT_USER_ASSIGNABLE_ROLES = {PermitRole.VIEWER, PermitRole.MANAGER}

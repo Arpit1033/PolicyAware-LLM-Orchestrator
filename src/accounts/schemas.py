@@ -16,3 +16,10 @@ class RegisterResponseSchema(Schema):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     message: str = "User registered successfully"
+
+class AgentRoleUpdateSchema(Schema):
+    role: str = Field(..., description="AI agent role: 'viewer' or 'manager'")
+
+class AgentRoleResponseSchema(Schema):
+    role: str
+    message: str = "Agent role updated successfully"

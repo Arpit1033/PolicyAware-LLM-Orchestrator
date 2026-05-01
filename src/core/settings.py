@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config, Csv
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -163,6 +164,12 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 GOOGLE_API_KEY = config("GOOGLE_API_KEY", default=None)
+GROQ_API_KEY = config("GROQ_API_KEY", default=None)
 TMDB_API_KEY = config("TMDB_API_KEY", default=None)
 PERMIT_API_KEY = config("PERMIT_API_KEY", default=None)
 PERMIT_PDP_URL = config("PERMIT_PDP_URL", default=None)
+
+NINJA_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}

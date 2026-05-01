@@ -1,15 +1,16 @@
 import logging
 
-from ninja_extra import api_controller, http_post, ControllerBase
+from ninja_extra import api_controller, http_post, ControllerBase, http_patch
 from ninja.errors import HttpError
+from ninja_jwt.authentication import JWTAuth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from asgiref.sync import async_to_sync
 
 from mypermit import permit_client
-from accounts.schemas import RegisterRequestSchema, RegisterResponseSchema
-from ai.constants import PERMIT_DEFAULT_ROLE, PERMIT_DEFAULT_TENANT
+from accounts.schemas import RegisterRequestSchema, RegisterResponseSchema, AgentRoleUpdateSchema, AgentRoleResponseSchema
+from ai.constants import PERMIT_DEFAULT_ROLE, PERMIT_DEFAULT_TENANT, PERMIT_USER_ASSIGNABLE_ROLES
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -49,3 +50,33 @@ class AuthController(ControllerBase):
             first_name=user.first_name,
             last_name=user.last_name,
         )
+
+@api_controller("/auth", tags=["AI Agent Permissions"], auth=JWTAuth())
+class AgentRoleController(ControllerBase):
+    @http_patch("/agent-role", url_name="update_agent_role", response={200: AgentRoleResponseSchema})
+    def update_agent_role(self, request, payload: AgentRoleUpdateSchema):
+        user_id = str(request.user.pk)
+
+        if payload.role not in PERMIT_USER_ASSIGNABLE_ROLES:
+            raise HttpError(400, f"Invalid role. Allowed roles: {', '.join(PERMIT_USER_ASSIGNABLE_ROLES)}")
+
+        try:
+            # Unassign all existing roles first
+            for role in PERMIT_USER_ASSIGNABLE_ROLES:
+                try:
+                    async_to_sync(permit_client.api.users.unassign_role)(
+                        {"user": user_id, "role": role, "tenant": PERMIT_DEFAULT_TENANT}
+                    )
+                except Exception:
+                    pass  # Role might not be assigned, that's fine
+
+            # Assign the new role
+            async_to_sync(permit_client.api.users.assign_role)(
+                {"user": user_id, "role": payload.role, "tenant": PERMIT_DEFAULT_TENANT}
+            )
+        except Exception as e:
+            logger.error(f"Permit.io role update failed for user {user_id}: {e}")
+            raise HttpError(502, "Failed to update agent role. Please try again.")
+
+        logger.info(f"User {user_id} updated agent role to '{payload.role}'")
+        return AgentRoleResponseSchema(role=payload.role)

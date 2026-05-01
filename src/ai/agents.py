@@ -1,7 +1,7 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.prebuilt import create_react_agent
 
-from ai.llms import get_llm_model
+from ai.llms import get_llm_model, LLMProvider
 from ai.tools import (
     document_tools,
     movie_discovery_tools
@@ -25,8 +25,8 @@ def movie_agent_modifier(state):
         
     return out_messages
 
-def get_document_agent(model=None, checkpointer=None):
-    llm_model = get_llm_model(model=model)
+def get_document_agent(provider=LLMProvider.GEMINI, model_name=None, checkpointer=None):
+    llm_model = get_llm_model(provider=provider, model_name=model_name)
 
     agent = create_react_agent(
         model=llm_model,  
@@ -37,8 +37,8 @@ def get_document_agent(model=None, checkpointer=None):
     )
     return agent
 
-def get_movie_discovery_agent(model=None, checkpointer=None):
-    llm_model = get_llm_model(model=model)
+def get_movie_discovery_agent(provider=LLMProvider.GEMINI, model_name=None, checkpointer=None):
+    llm_model = get_llm_model(provider=provider, model_name=model_name)
 
     agent = create_react_agent(
         model=llm_model,  

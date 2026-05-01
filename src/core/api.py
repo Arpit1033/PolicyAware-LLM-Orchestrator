@@ -4,7 +4,7 @@ from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.controller import NinjaJWTDefaultController
 from documents.api import router as documents_router
 from ai.api import router as ai_router
-from accounts.controllers import AuthController
+from accounts.controllers import AuthController, AgentRoleController
 
 
 class HealthResponse(Schema):
@@ -19,7 +19,7 @@ api = NinjaExtraAPI(
     auth=JWTAuth(),
 )
 
-api.register_controllers(NinjaJWTDefaultController, AuthController)
+api.register_controllers(NinjaJWTDefaultController, AuthController, AgentRoleController)
 api.add_router("/documents/", documents_router)
 api.add_router("/ai/", ai_router)
 
