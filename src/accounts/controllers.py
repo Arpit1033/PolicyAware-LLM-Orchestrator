@@ -61,6 +61,11 @@ class AgentRoleController(ControllerBase):
             raise HttpError(400, f"Invalid role. Allowed roles: {', '.join(PERMIT_USER_ASSIGNABLE_ROLES)}")
 
         try:
+            # Ensure user exists in Permit.io
+            async_to_sync(permit_client.api.users.sync)(
+                {"key": user_id, "email": request.user.email}
+            )
+
             # Unassign all existing roles first
             for role in PERMIT_USER_ASSIGNABLE_ROLES:
                 try:
