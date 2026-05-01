@@ -10,10 +10,42 @@ from asgiref.sync import async_to_sync
 
 from mypermit import permit_client
 from accounts.schemas import RegisterRequestSchema, RegisterResponseSchema, AgentRoleUpdateSchema, AgentRoleResponseSchema
-from ai.constants import PERMIT_DEFAULT_ROLE, PERMIT_DEFAULT_TENANT, PERMIT_USER_ASSIGNABLE_ROLES
+from ai.constants import (
+    PERMIT_DEFAULT_ROLE, PERMIT_DEFAULT_TENANT, PERMIT_USER_ASSIGNABLE_ROLES,
+    PERMIT_RESOURCE_INSTANCE, is_resource_role
+)
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+def _assign_permit_role(user_id: str, role: str):
+    """Assign a role using the correct Permit.io API based on role type."""
+    if is_resource_role(role):
+        async_to_sync(permit_client.api.role_assignments.assign)({
+            "user": user_id, "role": role,
+            "tenant": PERMIT_DEFAULT_TENANT,
+            "resource_instance": PERMIT_RESOURCE_INSTANCE,
+        })
+    else:
+        async_to_sync(permit_client.api.users.assign_role)({
+            "user": user_id, "role": role, "tenant": PERMIT_DEFAULT_TENANT,
+        })
+
+
+def _unassign_permit_role(user_id: str, role: str):
+    """Unassign a role using the correct Permit.io API based on role type."""
+    if is_resource_role(role):
+        async_to_sync(permit_client.api.role_assignments.unassign)({
+            "user": user_id, "role": role,
+            "tenant": PERMIT_DEFAULT_TENANT,
+            "resource_instance": PERMIT_RESOURCE_INSTANCE,
+        })
+    else:
+        async_to_sync(permit_client.api.users.unassign_role)({
+            "user": user_id, "role": role, "tenant": PERMIT_DEFAULT_TENANT,
+        })
+
 
 @api_controller("/auth", tags=["Authentication"], auth=None)
 class AuthController(ControllerBase):
@@ -39,7 +71,7 @@ class AuthController(ControllerBase):
 
         try:
             async_to_sync(permit_client.api.users.sync)({"key": str(user.id), "email": user.email})
-            async_to_sync(permit_client.api.users.assign_role)({"user": str(user.id), "role": PERMIT_DEFAULT_ROLE, "tenant": PERMIT_DEFAULT_TENANT})
+            _assign_permit_role(str(user.id), PERMIT_DEFAULT_ROLE)
         except Exception as e:
             logger.error(f"Permit.io sync failed for user {user.id}: {e}")
 
@@ -69,19 +101,16 @@ class AgentRoleController(ControllerBase):
             # Unassign all existing roles first
             for role in PERMIT_USER_ASSIGNABLE_ROLES:
                 try:
-                    async_to_sync(permit_client.api.users.unassign_role)(
-                        {"user": user_id, "role": role, "tenant": PERMIT_DEFAULT_TENANT}
-                    )
+                    _unassign_permit_role(user_id, role)
                 except Exception:
                     pass  # Role might not be assigned, that's fine
 
             # Assign the new role
-            async_to_sync(permit_client.api.users.assign_role)(
-                {"user": user_id, "role": payload.role, "tenant": PERMIT_DEFAULT_TENANT}
-            )
+            _assign_permit_role(user_id, payload.role)
         except Exception as e:
             logger.error(f"Permit.io role update failed for user {user_id}: {e}")
             raise HttpError(502, "Failed to update agent role. Please try again.")
 
         logger.info(f"User {user_id} updated agent role to '{payload.role}'")
         return AgentRoleResponseSchema(role=payload.role)
+

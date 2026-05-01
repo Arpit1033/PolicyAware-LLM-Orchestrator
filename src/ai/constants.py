@@ -34,3 +34,10 @@ class PermitRole(StrEnum):
 PERMIT_DEFAULT_ROLE = PermitRole.VIEWER
 PERMIT_DEFAULT_TENANT = "default"
 PERMIT_USER_ASSIGNABLE_ROLES = {PermitRole.VIEWER, PermitRole.MANAGER, PermitRole.ADMIN}
+
+# Resource instance for resource-level role assignments (e.g., document#manager)
+PERMIT_RESOURCE_INSTANCE = "document:*"
+
+def is_resource_role(role: str) -> bool:
+    """Check if a role is resource-scoped (contains '#' separator)."""
+    return "#" in role
